@@ -1,0 +1,90 @@
+---
+title: "DataLab day 5 RStudio"
+author: "Hallie Rutten -Dream Team"
+date: '2022-06-06'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(dplyr)
+library(readr)
+#library(gsheet)
+#library(leaflet)
+#library(leaflet.extras)
+
+movies <- read_csv('https://raw.githubusercontent.com/ericmkeen/capstone/master/movies.csv')
+```
+
+What are IMDb ratings? 
+IMDb registered users can cast a vote (from 1 to 10) on every released title in the database. Individual votes are then aggregated and summarized as a single IMDb rating, visible on the title's main page.
+
+Metascore is considered the rating of a film. 
+Scores are assigned to movie's reviews of large group of the world's most respected critics, and weighted average are applied to summarize their opinions range. The result is shown in single number that captures the essence of critical opinion in one Metascore.
+
+### money distribution
+
+```{r}
+movies <- movies %>% 
+  mutate( hours = round(runtime/60,1),
+          mill = gross/1000000,
+          mil10 = round(mill/10),
+          mil100 = round(mill/100) )
+
+ggplot( movies ) +
+  geom_histogram( aes(x=mill), bins=100 ) +
+  labs(title="Movie money distribution", subtitle="By millions",
+       x="Millions made", y="number of movies" )
+
+ggplot( movies ) +
+  geom_histogram( aes(x=mil10), bins=50 ) +
+  labs(title="Movie money distribution", subtitle="By 10 millions",
+       x="10 Millions made", y="number of movies" )
+
+ggplot( movies ) +
+  geom_histogram( aes(x=mil100) ) +
+  labs(title="Movie money distribution", subtitle="By 100 millions",
+       x="100 Millions made", y="number of movies" )
+
+movieLo <- movies %>% 
+  filter(mil100 < 5) %>% 
+  mutate( year = as.numeric(year),
+          decade = round(year/10)*10,
+          century = floor(decade/100)*100 )
+
+#rs <- ("This is First R String Example")
+#strsplit(rs, split = " ")
+```
+
+## Critic and Audience ratings
+
+```{r}
+ggplot( movies ) +
+  geom_point( aes(x=rating_meta, y=rating_imdb, color=mil100) ) +
+  labs(title="Movie ratings",
+       x="Meta rating (critics)", y="IMDb rating (audience)" )
+
+ggplot( movieLo ) + 
+  geom_histogram( aes(x=rating_imdb, fill=mil100) ) +
+  labs(title="Movie rating distribution", subtitle="Rating by audience",
+       x="IMDb rating", y="number of movies",
+       caption="Audience ratings are skewed to the right")
+
+ggplot( movieLo ) + 
+  geom_histogram( aes(x=rating_meta, fill=mil100) ) +
+  labs(title="Movie rating distribution", subtitle="Rating by critics",
+       x="Meta rating", y="number of movies",
+       caption="Critic ratings are skewed to the left")
+
+ggplot( movieLo ) + 
+  geom_point( aes(x=rating_meta, y=rating_imdb, color=mil100) ) +
+  labs(title="Movie ratings", subtitle="critics vs audience",
+       x="Meta rating (critics)", y="IMDb rating (audience)",
+       caption="The critics tend to overestimate it")
+
+```
+
